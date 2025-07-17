@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/pchchv/express/resultext"
+	"github.com/pchchv/extender/resultext"
 	. "github.com/pchchv/go-assert"
 )
 
