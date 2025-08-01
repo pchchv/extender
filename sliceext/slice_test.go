@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/pchchv/extender/optionext"
+	"github.com/pchchv/extender/values/optionext"
 	. "github.com/pchchv/go-assert"
 )
 

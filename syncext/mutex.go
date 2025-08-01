@@ -3,7 +3,7 @@ package syncext
 import (
 	"sync"
 
-	"github.com/pchchv/extender/resultext"
+	"github.com/pchchv/extender/values/resultext"
 )
 
 // MutexGuard protects the inner contents of a Mutex for safety and unlocking.
