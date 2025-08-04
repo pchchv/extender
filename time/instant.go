@@ -18,3 +18,8 @@ func (i Instant) Since(instant Instant) time.Duration {
 	}
 	return time.Duration(i - instant)
 }
+
+// Elapsed returns the duration since the instant was created.
+func (i Instant) Elapsed() time.Duration {
+	return time.Duration(NewInstant() - i)
+}
