@@ -5,7 +5,7 @@ import "unsafe"
 // BytesToString converts an array of bytes into a string without allocating.
 // The byte slice passed to this function is not to be used after this call as it's unsafe.
 func BytesToString(b []byte) string {
-	return *(*string)(unsafe.Pointer(&b))
+	return unsafe.String(unsafe.SliceData(b), len(b))
 }
 
 // StringToBytes converts an existing string into an []byte without allocating.
