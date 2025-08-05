@@ -29,3 +29,15 @@ func (f Frame) File() string {
 func (f Frame) Line() int {
 	return f.Frame.Line
 }
+
+// StackLevel returns a stack Frame skipping the number of supplied frames.
+// This is primarily used by
+// other libraries who use this
+// package internally as the additional.
+func StackLevel(skip int) (f Frame) {
+	var frame [3]uintptr
+	runtime.Callers(skip+2, frame[:])
+	frames := runtime.CallersFrames(frame[:])
+	f.Frame, _ = frames.Next()
+	return
+}
