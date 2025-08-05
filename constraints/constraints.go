@@ -14,3 +14,8 @@ type Unsigned interface {
 type Complex interface {
 	~complex64 | ~complex128
 }
+
+// Float represents any float type.
+type Float interface {
+	~float32 | ~float64
+}
