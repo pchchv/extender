@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"os/signal"
 	"syscall"
 	"time"
 )
@@ -62,6 +63,21 @@ func (c *contextBuilder) Timeout(timeout time.Duration) *contextBuilder {
 func (c *contextBuilder) Signals(signals ...os.Signal) *contextBuilder {
 	c.signals = signals
 	return c
+}
+
+// Build finalizes the context builder and returns the configured `context.Context`.
+//
+// This will spawn another goroutine listening for the
+// configured signals and will cancel the
+// context when received with the configured settings.
+func (c *contextBuilder) Build() context.Context {
+	var sig = make(chan os.Signal, 1)
+	signal.Notify(sig, c.signals...)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go listen(sig, cancel, c.exitFn, c.timeout, c.forceExit)
+
+	return ctx
 }
 
 func listen(sig <-chan os.Signal, cancel context.CancelFunc, exitFn func(int), timeout time.Duration, forceExit bool) {
