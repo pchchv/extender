@@ -1,6 +1,13 @@
 package ioext
 
-import "io"
+import (
+	"errors"
+	"io"
+)
+
+// ErrLimitedReaderEOF is an error returned by LimitedReader to give feedback to the fact that we did not hit an
+// EOF of the Reader but hit the limit imposed by the LimitedReader.
+var ErrLimitedReaderEOF = errors.New("LimitedReader EOF: limit reached")
 
 // LimitedReader reads from R but limits the amount of data returned to just N bytes.
 // Each call to Read updates N to reflect the new amount remaining.
@@ -16,4 +23,22 @@ type LimitedReader struct {
 // but stops with ErrLimitedReaderEOF after n bytes.
 func LimitReader(r io.Reader, n int64) *LimitedReader {
 	return &LimitedReader{R: r, N: n}
+}
+
+func (l *LimitedReader) Read(p []byte) (n int, err error) {
+	if int64(len(p)) > l.N {
+		p = p[0 : l.N+1]
+	}
+
+	n, err = l.R.Read(p)
+	l.N -= int64(n)
+	if err != nil {
+		return
+	}
+
+	if l.N < 0 {
+		return n, ErrLimitedReaderEOF
+	}
+
+	return
 }
