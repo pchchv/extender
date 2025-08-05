@@ -28,3 +28,20 @@ func Context() *contextBuilder {
 		exitFn:    os.Exit,
 	}
 }
+
+// ExitFn sets the exit function to use.
+// Defaults to `os.Exit`.
+//
+// This is used in the unit tests but can be used to intercept the
+// exit call and do something else as needed also.
+func (c *contextBuilder) ExitFn(exitFn func(int)) *contextBuilder {
+	c.exitFn = exitFn
+	return c
+}
+
+// ForceExit sets whether to force terminate ungracefully upon receipt of a second signal.
+// Defaults to true.
+func (c *contextBuilder) ForceExit(forceExit bool) *contextBuilder {
+	c.forceExit = forceExit
+	return c
+}
