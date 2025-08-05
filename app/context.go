@@ -1,6 +1,8 @@
 package appext
 
 import (
+	"context"
+	"log"
 	"os"
 	"syscall"
 	"time"
@@ -60,4 +62,30 @@ func (c *contextBuilder) Timeout(timeout time.Duration) *contextBuilder {
 func (c *contextBuilder) Signals(signals ...os.Signal) *contextBuilder {
 	c.signals = signals
 	return c
+}
+
+func listen(sig <-chan os.Signal, cancel context.CancelFunc, exitFn func(int), timeout time.Duration, forceExit bool) {
+	s := <-sig
+	cancel()
+
+	log.Printf("received shutdown signal %q\n", s)
+
+	if timeout > 0 {
+		select {
+		case s := <-sig:
+			if forceExit {
+				log.Printf("received second shutdown signal %q, forcing exit\n", s)
+				exitFn(1)
+			}
+		case <-time.After(timeout):
+			log.Printf("timeout of %s reached, forcing exit\n", timeout)
+			exitFn(1)
+		}
+	} else {
+		s = <-sig
+		if forceExit {
+			log.Printf("received second shutdown signal %q, forcing exit\n", s)
+			exitFn(1)
+		}
+	}
 }
