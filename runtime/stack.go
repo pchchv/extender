@@ -41,3 +41,8 @@ func StackLevel(skip int) (f Frame) {
 	f.Frame, _ = frames.Next()
 	return
 }
+
+// Stack returns a stack Frame.
+func Stack() Frame {
+	return StackLevel(1)
+}
