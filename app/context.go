@@ -45,3 +45,19 @@ func (c *contextBuilder) ForceExit(forceExit bool) *contextBuilder {
 	c.forceExit = forceExit
 	return c
 }
+
+// Timeout sets the timeout for graceful shutdown before forcing the issue exiting with exit code 1.
+// Defaults to 30 seconds.
+//
+// A timeout of <= 0, not recommended,
+// disables the timeout and will wait forever for a seconds signal or application shuts down.
+func (c *contextBuilder) Timeout(timeout time.Duration) *contextBuilder {
+	c.timeout = timeout
+	return c
+}
+
+// Signals sets the signals to listen for. Defaults to `os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT`.
+func (c *contextBuilder) Signals(signals ...os.Signal) *contextBuilder {
+	c.signals = signals
+	return c
+}
