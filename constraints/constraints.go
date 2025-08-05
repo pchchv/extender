@@ -9,3 +9,8 @@ type Signed interface {
 type Unsigned interface {
 	~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr
 }
+
+// Complex represents any complex number type.
+type Complex interface {
+	~complex64 | ~complex128
+}
