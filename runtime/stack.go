@@ -17,3 +17,15 @@ func (f Frame) Function() string {
 	i := strings.LastIndexByte(name, '.')
 	return name[i+1:]
 }
+
+// File is the runtime.Frame.File stripped down to just the filename.
+func (f Frame) File() string {
+	name := f.Frame.File
+	i := strings.LastIndexByte(name, '/')
+	return name[i+1:]
+}
+
+// Line is the line of the runtime.Frame and exposed for convenience.
+func (f Frame) Line() int {
+	return f.Frame.Line
+}
