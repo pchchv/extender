@@ -19,3 +19,8 @@ type Complex interface {
 type Float interface {
 	~float32 | ~float64
 }
+
+// Integer represents any integer type both signed and unsigned.
+type Integer interface {
+	Signed | Unsigned
+}
