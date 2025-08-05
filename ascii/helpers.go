@@ -9,3 +9,13 @@ func IsUpper(c byte) bool {
 func IsLower(c byte) bool {
 	return c >= 'a' && c <= 'z'
 }
+
+// IsAlphanumeric returns true if the byte is an ASCII letter or digit.
+func IsAlphanumeric(c byte) bool {
+	return IsLower(c) || IsUpper(c) || IsDigit(c)
+}
+
+// IsDigit returns true if the byte is an ASCII digit.
+func IsDigit(c byte) bool {
+	return c >= '0' && c <= '9'
+}
