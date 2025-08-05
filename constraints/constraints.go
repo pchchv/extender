@@ -24,3 +24,8 @@ type Float interface {
 type Integer interface {
 	Signed | Unsigned
 }
+
+// Number represents any non-complex number eg. Integer and Float.
+type Number interface {
+	Integer | Float
+}
