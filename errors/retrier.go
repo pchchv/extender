@@ -3,11 +3,21 @@ package errorsext
 import (
 	"context"
 	"time"
+
+	resultext "github.com/pchchv/extender/values/result"
 )
 
-// MaxAttemptsNonRetryableReset will apply the max attempts to all errors not determined to be retryable,
-// but will reset the attempts if a retryable error is encountered after a non-retryable error.
-const MaxAttemptsNonRetryableReset MaxAttemptsMode = iota
+const (
+	// MaxAttemptsNonRetryableReset will apply the max attempts to all errors not determined to be retryable,
+	// but will reset the attempts if a retryable error is encountered after a non-retryable error.
+	MaxAttemptsNonRetryableReset MaxAttemptsMode = iota
+	// MaxAttemptsNonRetryable will apply the max attempts to all errors not determined to be retryable.
+	MaxAttemptsNonRetryable
+	// MaxAttempts will apply the max attempts to all errors, even those determined to be retryable.
+	MaxAttempts
+	// MaxAttemptsUnlimited will not apply a maximum number of attempts.
+	MaxAttemptsUnlimited
+)
 
 // MaxAttemptsMode is used to set the mode for the maximum number of attempts.
 //
@@ -112,4 +122,59 @@ func (r Retryer[T, E]) IsRetryableFn(fn IsRetryableFn2[E]) Retryer[T, E] {
 func (r Retryer[T, E]) IsEarlyReturnFn(fn EarlyReturnFn[E]) Retryer[T, E] {
 	r.isEarlyReturnFn = fn
 	return r
+}
+
+// Do will execute the provided functions code and automatically retry using the provided retry function.
+func (r Retryer[T, E]) Do(ctx context.Context, fn RetryableFn[T, E]) resultext.Result[T, E] {
+	var attempt int
+	remaining := r.maxAttempts
+	for {
+		var result resultext.Result[T, E]
+		if r.timeout == 0 {
+			result = fn(ctx)
+		} else {
+			ctx, cancel := context.WithTimeout(ctx, r.timeout)
+			result = fn(ctx)
+			cancel()
+		}
+
+		if result.IsErr() {
+			err := result.Err()
+			isRetryable := r.isRetryableFn(ctx, err)
+			if !isRetryable && r.isEarlyReturnFn != nil && r.isEarlyReturnFn(ctx, err) {
+				return result
+			}
+
+			switch r.maxAttemptsMode {
+			case MaxAttemptsUnlimited:
+				goto RETRY
+			case MaxAttemptsNonRetryableReset:
+				if isRetryable {
+					remaining = r.maxAttempts
+					goto RETRY
+				} else if remaining > 0 {
+					remaining--
+				}
+			case MaxAttemptsNonRetryable:
+				if isRetryable {
+					goto RETRY
+				} else if remaining > 0 {
+					remaining--
+				}
+			case MaxAttempts:
+				if remaining > 0 {
+					remaining--
+				}
+			}
+
+			if remaining == 0 {
+				return result
+			}
+		RETRY:
+			r.bo(ctx, attempt, err)
+			attempt++
+			continue
+		}
+		return result
+	}
 }
