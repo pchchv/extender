@@ -87,3 +87,29 @@ func (r Retryer[T, E]) Timeout(timeout time.Duration) Retryer[T, E] {
 	r.timeout = timeout
 	return r
 }
+
+// MaxAttempts sets the maximum number of attempts for the `Retryer`.
+//
+// NOTE: Max attempts is optional and if not set will retry indefinitely on retryable errors.
+func (r Retryer[T, E]) MaxAttempts(mode MaxAttemptsMode, maxAttempts uint8) Retryer[T, E] {
+	r.maxAttemptsMode, r.maxAttempts = mode, maxAttempts
+	return r
+}
+
+// IsRetryableFn sets the `IsRetryableFn` for the `Retryer`.
+func (r Retryer[T, E]) IsRetryableFn(fn IsRetryableFn2[E]) Retryer[T, E] {
+	if fn == nil {
+		fn = func(_ context.Context, _ E) bool { return false }
+	}
+
+	r.isRetryableFn = fn
+	return r
+}
+
+// IsEarlyReturnFn sets the `EarlyReturnFn` for the `Retryer`.
+//
+// NOTE: If the `EarlyReturnFn` and `IsRetryableFn` are both set and a conflicting `IsRetryableFn` will take precedence.
+func (r Retryer[T, E]) IsEarlyReturnFn(fn EarlyReturnFn[E]) Retryer[T, E] {
+	r.isEarlyReturnFn = fn
+	return r
+}
