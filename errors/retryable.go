@@ -71,3 +71,13 @@ func IsTemporaryConnection(err error) (retryType string, isRetryable bool) {
 	}
 	return "", false
 }
+
+// IsTimeout returns true if the provided error is considered
+// a retryable timeout error by testing if it complies with
+// an interface implementing `Timeout() bool` and calling the function.
+func IsTimeout(err error) bool {
+	var t interface {
+		Timeout() bool
+	}
+	return errors.As(err, &t) && t.Timeout()
+}
