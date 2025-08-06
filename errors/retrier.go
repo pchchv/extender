@@ -1,6 +1,13 @@
 package errorsext
 
-import "context"
+import (
+	"context"
+	"time"
+)
+
+// MaxAttemptsNonRetryableReset will apply the max attempts to all errors not determined to be retryable,
+// but will reset the attempts if a retryable error is encountered after a non-retryable error.
+const MaxAttemptsNonRetryableReset MaxAttemptsMode = iota
 
 // MaxAttemptsMode is used to set the mode for the maximum number of attempts.
 //
@@ -27,3 +34,38 @@ type EarlyReturnFn[E any] func(ctx context.Context, e E) (earlyReturn bool)
 
 // IsRetryableFn2 is called to determine if the type E is retryable.
 type IsRetryableFn2[E any] func(ctx context.Context, e E) (isRetryable bool)
+
+// Retryer is used to retry any fallible operation.
+type Retryer[T, E any] struct {
+	isRetryableFn   IsRetryableFn2[E]
+	isEarlyReturnFn EarlyReturnFn[E]
+	maxAttemptsMode MaxAttemptsMode
+	maxAttempts     uint8
+	bo              BackoffFn[E]
+	timeout         time.Duration
+}
+
+// NewRetryer returns a new `Retryer` with sane default values.
+//
+// The default values are:
+// - `MaxAttemptsMode` is `MaxAttemptsNonRetryableReset`.
+// - `MaxAttempts` is 5.
+// - `Timeout` is 0 no context timeout.
+// - `IsRetryableFn` will always return false as `E` is unknown until defined.
+// - `BackoffFn` will sleep for 200ms. It's recommended to use exponential backoff for production.
+// - `EarlyReturnFn` will be None.
+func NewRetryer[T, E any]() Retryer[T, E] {
+	return Retryer[T, E]{
+		isRetryableFn:   func(_ context.Context, _ E) bool { return false },
+		maxAttemptsMode: MaxAttemptsNonRetryableReset,
+		maxAttempts:     5,
+		bo: func(ctx context.Context, attempt int, _ E) {
+			t := time.NewTimer(time.Millisecond * 200)
+			defer t.Stop()
+			select {
+			case <-ctx.Done():
+			case <-t.C:
+			}
+		},
+	}
+}
