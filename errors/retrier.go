@@ -24,3 +24,6 @@ type BackoffFn[E any] func(ctx context.Context, attempt int, e E)
 // eg. If retrying an HTTP request and getting 400 Bad Request,
 // it's unlikely to ever succeed and should not be retried.
 type EarlyReturnFn[E any] func(ctx context.Context, e E) (earlyReturn bool)
+
+// IsRetryableFn2 is called to determine if the type E is retryable.
+type IsRetryableFn2[E any] func(ctx context.Context, e E) (isRetryable bool)
