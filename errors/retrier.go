@@ -69,3 +69,21 @@ func NewRetryer[T, E any]() Retryer[T, E] {
 		},
 	}
 }
+
+// Backoff sets the backoff function for the `Retryer`.
+func (r Retryer[T, E]) Backoff(fn BackoffFn[E]) Retryer[T, E] {
+	if fn == nil {
+		fn = func(_ context.Context, _ int, _ E) {}
+	}
+
+	r.bo = fn
+	return r
+}
+
+// Timeout sets the timeout for the `Retryer`.
+// This is the timeout per `RetyableFn` attempt and not the entirety of the `Retryer` execution.
+// Timeout of 0 will disable the timeout and is the default.
+func (r Retryer[T, E]) Timeout(timeout time.Duration) Retryer[T, E] {
+	r.timeout = timeout
+	return r
+}
