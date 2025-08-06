@@ -5,6 +5,10 @@ import (
 	"syscall"
 )
 
+// ErrMaxAttemptsReached is a placeholder error to use when
+// some retryable even has reached its maximum number of attempts.
+var ErrMaxAttemptsReached = errors.New("max attempts reached")
+
 // IsRetryable returns true if the provided error is considered retryable by
 // testing if it complies with an interface implementing `Retryable() bool` or
 // `IsRetryable bool` and calling the function.
@@ -19,7 +23,27 @@ func IsRetryable(err error) bool {
 	var t2 interface {
 		Retryable() bool
 	}
+
 	return errors.As(err, &t2) && t2.Retryable()
+}
+
+// IsRetryableNetwork returns if the provided error is a retryable network related error.
+// It also returns the type, in string form,
+// for optional logging and metrics use.
+func IsRetryableNetwork(err error) (retryType string, isRetryable bool) {
+	if IsRetryable(err) {
+		return "retryable", true
+	}
+
+	if IsTemporary(err) {
+		return "temporary", true
+	}
+
+	if IsTimeout(err) {
+		return "timeout", true
+	}
+
+	return IsTemporaryConnection(err)
 }
 
 // IsTemporary returns true if the provided error is
