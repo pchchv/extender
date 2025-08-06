@@ -2,6 +2,7 @@ package errorsext
 
 import (
 	"errors"
+	"strings"
 	"syscall"
 )
 
@@ -44,6 +45,28 @@ func IsRetryableNetwork(err error) (retryType string, isRetryable bool) {
 	}
 
 	return IsTemporaryConnection(err)
+}
+
+// IsRetryableHTTP returns if the provided error is considered retryable HTTP error.
+// It also returns the type, in string form, for optional logging and metrics use.
+func IsRetryableHTTP(err error) (retryType string, isRetryable bool) {
+	if retryType, isRetryable = IsRetryableNetwork(err); isRetryable {
+		return
+	}
+
+	errStr := err.Error()
+	if strings.Contains(errStr, "http2: server sent GOAWAY") {
+		return "goaway", true
+	}
+
+	// errServerClosedIdle is not seen by users for idempotent HTTP requests,
+	// but may be seen by a user if the server shuts down an idle connection and sends its FIN
+	// in flight with already-written POST body bytes from the client.
+	if strings.Contains(errStr, "http: server closed idle connection") {
+		return "server_close_idle_connection", true
+	}
+
+	return "", false
 }
 
 // IsTemporary returns true if the provided error is
