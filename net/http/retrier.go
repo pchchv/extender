@@ -2,12 +2,16 @@ package httpext
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
 
 	bytesext "github.com/pchchv/extender/bytes"
 	errorsext "github.com/pchchv/extender/errors"
+	ioext "github.com/pchchv/extender/io"
+	typesext "github.com/pchchv/extender/types"
+	valuesext "github.com/pchchv/extender/values"
 	resultext "github.com/pchchv/extender/values/result"
 )
 
@@ -126,4 +130,58 @@ func (r Retryer) Timeout(timeout time.Duration) Retryer {
 func (r Retryer) Client(client *http.Client) Retryer {
 	r.client = client
 	return r
+}
+
+// Do will execute the provided functions code and automatically retry using the
+// provided retry function decoding the response body into the
+// desired type `v`, which must be passed as mutable.
+func (r Retryer) Do(ctx context.Context, fn BuildRequestFn, v any, expectedResponseCodes ...int) error {
+	result := errorsext.NewRetryer[typesext.Nothing, error]().
+		IsRetryableFn(r.isRetryableFn).
+		MaxAttempts(r.mode, r.maxAttempts).
+		Backoff(r.backoffFn).
+		Timeout(r.timeout).
+		IsEarlyReturnFn(r.isEarlyReturnFn).
+		Do(ctx, func(ctx context.Context) resultext.Result[typesext.Nothing, error] {
+			req := fn(ctx)
+			if req.IsErr() {
+				return resultext.Err[typesext.Nothing, error](req.Err())
+			}
+
+			resp, err := r.client.Do(req.Unwrap())
+			if err != nil {
+				return resultext.Err[typesext.Nothing, error](err)
+			}
+			defer func() {
+				_, _ = io.Copy(io.Discard, ioext.LimitReader(resp.Body, r.maxBytes))
+				_ = resp.Body.Close()
+			}()
+
+			if len(expectedResponseCodes) > 0 {
+				for _, code := range expectedResponseCodes {
+					if resp.StatusCode == code {
+						goto DECODE
+					}
+				}
+
+				b, _ := io.ReadAll(ioext.LimitReader(resp.Body, r.maxBytes))
+				return resultext.Err[typesext.Nothing, error](ErrStatusCode{
+					StatusCode:            resp.StatusCode,
+					IsRetryableStatusCode: r.isRetryableStatusCodeFn(ctx, resp.StatusCode),
+					Headers:               resp.Header,
+					Body:                  b,
+				})
+			}
+		DECODE:
+			if err = r.decodeFn(ctx, resp, r.maxBytes, v); err != nil {
+				return resultext.Err[typesext.Nothing, error](err)
+			}
+			return resultext.Ok[typesext.Nothing, error](valuesext.Nothing)
+		})
+
+	if result.IsErr() {
+		return result.Err()
+	}
+
+	return nil
 }
