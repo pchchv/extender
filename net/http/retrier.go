@@ -73,3 +73,15 @@ func (r Retryer) IsRetryableStatusCodeFn(fn IsRetryableStatusCodeFn) Retryer {
 	r.isRetryableStatusCodeFn = fn
 	return r
 }
+
+// IsEarlyReturnFn sets the `EarlyReturnFn` for the `Retryer`.
+func (r Retryer) IsEarlyReturnFn(fn errorsext.EarlyReturnFn[error]) Retryer {
+	r.isEarlyReturnFn = fn
+	return r
+}
+
+// Backoff sets the backoff function for the `Retryer`.
+func (r Retryer) Backoff(fn errorsext.BackoffFn[error]) Retryer {
+	r.backoffFn = fn
+	return r
+}
