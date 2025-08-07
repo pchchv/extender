@@ -9,6 +9,14 @@ import (
 	. "github.com/pchchv/extender/values/option"
 )
 
+const (
+	QueryParams QueryParamsOption = iota
+	NoQueryParams
+)
+
+// QueryParamsOption represents the options for including query parameters during Decode helper functions.
+type QueryParamsOption uint8
+
 // HasRetryAfter parses the Retry-After header and returns the duration if possible.
 func HasRetryAfter(headers http.Header) Option[time.Duration] {
 	if ra := headers.Get(RetryAfter); ra != "" {
