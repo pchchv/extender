@@ -112,3 +112,18 @@ func (r Retryer) MaxBytes(i bytesext.Bytes) Retryer {
 	r.maxBytes = i
 	return r
 }
+
+// Timeout sets the timeout for the `Retryer`.
+// This is the timeout per `RetyableFn` attempt and not the entirety of the `Retryer` execution.
+//
+// Timeout of 0 will disable the timeout and is the default.
+func (r Retryer) Timeout(timeout time.Duration) Retryer {
+	r.timeout = timeout
+	return r
+}
+
+// Client sets the `http.Client` for the `Retryer`.
+func (r Retryer) Client(client *http.Client) Retryer {
+	r.client = client
+	return r
+}
