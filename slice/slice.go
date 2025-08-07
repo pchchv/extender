@@ -3,7 +3,7 @@ package sliceext
 import (
 	"sort"
 
-	"github.com/pchchv/extender/values/optionext"
+	optionext "github.com/pchchv/extender/values/option"
 )
 
 // Sort sorts the sliceWrapper x given the provided less function.
