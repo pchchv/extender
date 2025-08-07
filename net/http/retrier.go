@@ -1,9 +1,15 @@
 package httpext
 
 import (
+	"context"
 	"net/http"
 	"strconv"
+
+	resultext "github.com/pchchv/extender/values/result"
 )
+
+// BuildRequestFn is a function used to rebuild an HTTP request for use in retryable code.
+type BuildRequestFn func(ctx context.Context) resultext.Result[*http.Request, error]
 
 // ErrStatusCode can be used to treat/indicate a status code as an error and ability to indicate if it is retryable.
 type ErrStatusCode struct {
