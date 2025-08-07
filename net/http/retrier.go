@@ -4,8 +4,10 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"time"
 
 	bytesext "github.com/pchchv/extender/bytes"
+	errorsext "github.com/pchchv/extender/errors"
 	resultext "github.com/pchchv/extender/values/result"
 )
 
@@ -35,4 +37,23 @@ func (e ErrStatusCode) Error() string {
 // IsRetryable returns if the provided status code is considered retryable.
 func (e ErrStatusCode) IsRetryable() bool {
 	return e.IsRetryableStatusCode
+}
+
+// Retryer is used to retry any fallible operation.
+//
+// The `Retryer` is designed to be stateless and reusable.
+// Configuration is also copy and so a base `Retryer` can
+// be used and changed for one-off requests.
+// E. g. changing max attempts resulting in a new `Retrier` for that request.
+type Retryer struct {
+	isRetryableFn           errorsext.IsRetryableFn2[error]
+	isRetryableStatusCodeFn IsRetryableStatusCodeFn
+	isEarlyReturnFn         errorsext.EarlyReturnFn[error]
+	decodeFn                DecodeAnyFn
+	backoffFn               errorsext.BackoffFn[error]
+	client                  *http.Client
+	timeout                 time.Duration
+	maxBytes                bytesext.Bytes
+	mode                    errorsext.MaxAttemptsMode
+	maxAttempts             uint8
 }
