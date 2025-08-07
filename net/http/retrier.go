@@ -80,8 +80,35 @@ func (r Retryer) IsEarlyReturnFn(fn errorsext.EarlyReturnFn[error]) Retryer {
 	return r
 }
 
+// DecodeFn sets the decode function for the `Retryer`.
+func (r Retryer) DecodeFn(fn DecodeAnyFn) Retryer {
+	if fn == nil {
+		fn = func(_ context.Context, _ *http.Response, _ bytesext.Bytes, _ any) error { return nil }
+	}
+
+	r.decodeFn = fn
+	return r
+}
+
 // Backoff sets the backoff function for the `Retryer`.
 func (r Retryer) Backoff(fn errorsext.BackoffFn[error]) Retryer {
 	r.backoffFn = fn
+	return r
+}
+
+// MaxAttempts sets the maximum number of attempts for the `Retryer`.
+//
+// NOTE: Max attempts is optional and if not set will retry indefinitely on retryable errors.
+func (r Retryer) MaxAttempts(mode errorsext.MaxAttemptsMode, maxAttempts uint8) Retryer {
+	r.mode, r.maxAttempts = mode, maxAttempts
+	return r
+}
+
+// MaxBytes sets the maximum memory to use when decoding the response body including:
+// - upon unexpected status codes.
+// - when decoding the response body.
+// - when draining the response body before closing allowing connection re-use.
+func (r Retryer) MaxBytes(i bytesext.Bytes) Retryer {
+	r.maxBytes = i
 	return r
 }
