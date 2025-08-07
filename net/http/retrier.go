@@ -57,3 +57,19 @@ type Retryer struct {
 	mode                    errorsext.MaxAttemptsMode
 	maxAttempts             uint8
 }
+
+// IsRetryableFn sets the `IsRetryableFn` for the `Retryer`.
+func (r Retryer) IsRetryableFn(fn errorsext.IsRetryableFn2[error]) Retryer {
+	r.isRetryableFn = fn
+	return r
+}
+
+// IsRetryableStatusCodeFn is called to determine if the status code is retryable.
+func (r Retryer) IsRetryableStatusCodeFn(fn IsRetryableStatusCodeFn) Retryer {
+	if fn == nil {
+		fn = func(_ context.Context, _ int) bool { return false }
+	}
+
+	r.isRetryableStatusCodeFn = fn
+	return r
+}
