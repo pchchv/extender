@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	bytesext "github.com/pchchv/extender/bytes"
 	resultext "github.com/pchchv/extender/values/result"
 )
 
@@ -14,6 +15,9 @@ type BuildRequestFn func(ctx context.Context) resultext.Result[*http.Request, er
 // IsRetryableStatusCodeFn is a function used to determine if
 // the provided status code is considered retryable.
 type IsRetryableStatusCodeFn func(ctx context.Context, code int) bool
+
+// DecodeAnyFn is a function used to decode the response body into the desired type.
+type DecodeAnyFn func(ctx context.Context, resp *http.Response, maxMemory bytesext.Bytes, v any) error
 
 // ErrStatusCode can be used to treat/indicate a status code as an error and ability to indicate if it is retryable.
 type ErrStatusCode struct {
