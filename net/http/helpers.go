@@ -2,6 +2,7 @@ package httpext
 
 import (
 	"compress/gzip"
+	"encoding/json"
 	"encoding/xml"
 	"io"
 	"net/http"
@@ -79,6 +80,27 @@ func decodeXML(headers http.Header, body io.Reader, qp QueryParamsOption, values
 	}
 
 	err := xml.NewDecoder(ioext.LimitReader(body, maxMemory)).Decode(v)
+	if qp != QueryParams || err != nil {
+		return err
+	}
+
+	return decodeQueryParams(values, v)
+}
+
+func decodeJSON(headers http.Header, body io.Reader, qp QueryParamsOption, values url.Values, maxMemory int64, v interface{}) error {
+	if encoding := headers.Get(ContentEncoding); encoding == Gzip {
+		gzr, err := gzip.NewReader(body)
+		if err != nil {
+			return err
+		}
+
+		defer func() {
+			_ = gzr.Close()
+		}()
+		body = gzr
+	}
+
+	err := json.NewDecoder(ioext.LimitReader(body, maxMemory)).Decode(v)
 	if qp != QueryParams || err != nil {
 		return err
 	}
