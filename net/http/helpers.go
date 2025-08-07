@@ -61,6 +61,22 @@ func DecodeXML(r *http.Request, qp QueryParamsOption, maxMemory int64, v interfa
 	return decodeXML(r.Header, r.Body, qp, values, maxMemory, v)
 }
 
+// DecodeJSON decodes the request body into the provided struct and
+// limits the request size via an ioext.LimitReader using the maxBytes param.
+//
+// The Content-Type e.g. "application/json" and http method are not checked.
+//
+// NOTE: when includeQueryParams=true query params will be parsed and included e. g. route /user?test=true 'test'
+// is added to parsed JSON and replaces any values that may have been present
+func DecodeJSON(r *http.Request, qp QueryParamsOption, maxMemory int64, v interface{}) (err error) {
+	var values url.Values
+	if qp == QueryParams {
+		values = r.URL.Query()
+	}
+
+	return decodeJSON(r.Header, r.Body, qp, values, maxMemory, v)
+}
+
 func decodeQueryParams(values url.Values, v interface{}) (err error) {
 	err = DefaultFormDecoder.Decode(v, values)
 	return
