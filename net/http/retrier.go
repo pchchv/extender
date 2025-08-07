@@ -185,3 +185,47 @@ func (r Retryer) Do(ctx context.Context, fn BuildRequestFn, v any, expectedRespo
 
 	return nil
 }
+
+// DoResponse will execute the provided functions code and automatically retry before returning the
+// *http.Response based on HTTP status code, if defined,
+// and can be used when processing of the response body may not be necessary or something custom is required.
+//
+// NOTE: it is up to the caller to close the response body if a successful request is made.
+func (r Retryer) DoResponse(ctx context.Context, fn BuildRequestFn, expectedResponseCodes ...int) resultext.Result[*http.Response, error] {
+	return errorsext.NewRetryer[*http.Response, error]().
+		IsRetryableFn(r.isRetryableFn).
+		MaxAttempts(r.mode, r.maxAttempts).
+		Backoff(r.backoffFn).
+		Timeout(r.timeout).
+		IsEarlyReturnFn(r.isEarlyReturnFn).
+		Do(ctx, func(ctx context.Context) resultext.Result[*http.Response, error] {
+			req := fn(ctx)
+			if req.IsErr() {
+				return resultext.Err[*http.Response, error](req.Err())
+			}
+
+			resp, err := r.client.Do(req.Unwrap())
+			if err != nil {
+				return resultext.Err[*http.Response, error](err)
+			}
+
+			if len(expectedResponseCodes) > 0 {
+				for _, code := range expectedResponseCodes {
+					if resp.StatusCode == code {
+						goto RETURN
+					}
+				}
+
+				b, _ := io.ReadAll(ioext.LimitReader(resp.Body, r.maxBytes))
+				_ = resp.Body.Close()
+				return resultext.Err[*http.Response, error](ErrStatusCode{
+					StatusCode:            resp.StatusCode,
+					IsRetryableStatusCode: r.isRetryableStatusCodeFn(ctx, resp.StatusCode),
+					Headers:               resp.Header,
+					Body:                  b,
+				})
+			}
+		RETURN:
+			return resultext.Ok[*http.Response, error](resp)
+		})
+}
