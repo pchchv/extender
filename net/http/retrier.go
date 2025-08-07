@@ -11,6 +11,10 @@ import (
 // BuildRequestFn is a function used to rebuild an HTTP request for use in retryable code.
 type BuildRequestFn func(ctx context.Context) resultext.Result[*http.Request, error]
 
+// IsRetryableStatusCodeFn is a function used to determine if
+// the provided status code is considered retryable.
+type IsRetryableStatusCodeFn func(ctx context.Context, code int) bool
+
 // ErrStatusCode can be used to treat/indicate a status code as an error and ability to indicate if it is retryable.
 type ErrStatusCode struct {
 	StatusCode            int         // the HTTP response status code that was encountered
