@@ -2,6 +2,7 @@ package httpext
 
 import (
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -32,4 +33,14 @@ func HasRetryAfter(headers http.Header) Option[time.Duration] {
 		}
 	}
 	return None[time.Duration]()
+}
+
+// DecodeQueryParams takes the URL Query params flag.
+func DecodeQueryParams(r *http.Request, v interface{}) (err error) {
+	return decodeQueryParams(r.URL.Query(), v)
+}
+
+func decodeQueryParams(values url.Values, v interface{}) (err error) {
+	err = DefaultFormDecoder.Decode(v, values)
+	return
 }
