@@ -263,6 +263,27 @@ func XMLBytes(w http.ResponseWriter, status int, b []byte) error {
 	return err
 }
 
+// JSON marshals provided interface + returns JSON + status code.
+func JSON(w http.ResponseWriter, status int, i interface{}) error {
+	b, err := json.Marshal(i)
+	if err != nil {
+		return err
+	}
+
+	w.Header().Set(ContentType, ApplicationJSON)
+	w.WriteHeader(status)
+	_, err = w.Write(b)
+	return err
+}
+
+// JSONBytes returns provided JSON response with status code.
+func JSONBytes(w http.ResponseWriter, status int, b []byte) (err error) {
+	w.Header().Set(ContentType, ApplicationJSON)
+	w.WriteHeader(status)
+	_, err = w.Write(b)
+	return err
+}
+
 func decodeQueryParams(values url.Values, v interface{}) (err error) {
 	err = DefaultFormDecoder.Decode(v, values)
 	return
