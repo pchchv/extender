@@ -106,6 +106,29 @@ func DecodeResponse[T any](r *http.Response, maxMemory bytesext.Bytes) (result T
 	return
 }
 
+// DecodeResponseAny takes the response and attempts to discover its content type via
+// the http headers and then decode the request body into the provided type.
+//
+// Example if header was "application/json" would decode using
+// json.NewDecoder(ioext.LimitReader(r.Body, maxBytes)).Decode(v).
+func DecodeResponseAny(r *http.Response, maxMemory bytesext.Bytes, v interface{}) (err error) {
+	typ := r.Header.Get(ContentType)
+	if idx := strings.Index(typ, ";"); idx != -1 {
+		typ = typ[:idx]
+	}
+
+	switch typ {
+	case nakedApplicationJSON:
+		err = decodeJSON(r.Header, r.Body, NoQueryParams, nil, maxMemory, v)
+	case nakedApplicationXML:
+		err = decodeXML(r.Header, r.Body, NoQueryParams, nil, maxMemory, v)
+	default:
+		err = errors.New("unsupported content type")
+	}
+
+	return
+}
+
 // DecodeForm parses the requests form data into the provided struct.
 //
 // The Content-Type and http method are not checked.
