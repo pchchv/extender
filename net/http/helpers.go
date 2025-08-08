@@ -223,6 +223,16 @@ func AcceptedLanguages(r *http.Request) (languages []string) {
 	return
 }
 
+// Attachment is a helper method for returning an attachment file to be downloaded,
+// if you with to open inline see function Inline.
+func Attachment(w http.ResponseWriter, r io.Reader, filename string) (err error) {
+	w.Header().Set(ContentDisposition, "attachment;filename="+filename)
+	w.Header().Set(ContentType, detectContentType(filename))
+	w.WriteHeader(http.StatusOK)
+	_, err = io.Copy(w, r)
+	return
+}
+
 func decodeQueryParams(values url.Values, v interface{}) (err error) {
 	err = DefaultFormDecoder.Decode(v, values)
 	return
