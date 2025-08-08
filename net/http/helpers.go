@@ -6,6 +6,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -162,6 +163,33 @@ func DecodeMultipartForm(r *http.Request, qp QueryParamsOption, maxMemory int64,
 			err = DefaultFormDecoder.Decode(v, r.MultipartForm.Value)
 		}
 	}
+	return
+}
+
+// ClientIP implements the best effort algorithm to return the real client IP,
+// it parses X-Real-IP and X-Forwarded-For in order to work properly with
+// reverse-proxies such us: nginx or haproxy.
+func ClientIP(r *http.Request) (clientIP string) {
+	values := r.Header[XRealIP]
+	if len(values) > 0 {
+		clientIP = strings.TrimSpace(values[0])
+		if clientIP != "" {
+			return
+		}
+	}
+
+	if values = r.Header[XForwardedFor]; len(values) > 0 {
+		clientIP = values[0]
+		if index := strings.IndexByte(clientIP, ','); index >= 0 {
+			clientIP = clientIP[0:index]
+		}
+		clientIP = strings.TrimSpace(clientIP)
+		if clientIP != "" {
+			return
+		}
+	}
+
+	clientIP, _, _ = net.SplitHostPort(strings.TrimSpace(r.RemoteAddr))
 	return
 }
 
