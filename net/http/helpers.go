@@ -29,6 +29,8 @@ const (
 	nakedApplicationXML  string = "application/xml"
 )
 
+var xmlHeaderBytes = []byte(xml.Header)
+
 // QueryParamsOption represents the options for including query parameters during Decode helper functions.
 type QueryParamsOption uint8
 
@@ -231,6 +233,34 @@ func Attachment(w http.ResponseWriter, r io.Reader, filename string) (err error)
 	w.WriteHeader(http.StatusOK)
 	_, err = io.Copy(w, r)
 	return
+}
+
+// XML marshals provided interface + returns XML + status code.
+func XML(w http.ResponseWriter, status int, i interface{}) error {
+	b, err := xml.Marshal(i)
+	if err != nil {
+		return err
+	}
+
+	w.Header().Set(ContentType, ApplicationXML)
+	w.WriteHeader(status)
+	if _, err = w.Write(xmlHeaderBytes); err == nil {
+		_, err = w.Write(b)
+	}
+
+	return err
+}
+
+// XMLBytes returns provided XML response with status code.
+func XMLBytes(w http.ResponseWriter, status int, b []byte) error {
+	w.Header().Set(ContentType, ApplicationXML)
+	w.WriteHeader(status)
+	_, err := w.Write(xmlHeaderBytes)
+	if err == nil {
+		_, err = w.Write(b)
+	}
+
+	return err
 }
 
 func decodeQueryParams(values url.Values, v interface{}) (err error) {
