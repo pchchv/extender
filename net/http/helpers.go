@@ -106,6 +106,42 @@ func DecodeResponse[T any](r *http.Response, maxMemory bytesext.Bytes) (result T
 	return
 }
 
+// DecodeForm parses the requests form data into the provided struct.
+//
+// The Content-Type and http method are not checked.
+//
+// NOTE: when QueryParamsOption=QueryParams the query params will be parsed and included
+// e. g. route /user?test=true 'test' is added to parsed Form.
+func DecodeForm(r *http.Request, qp QueryParamsOption, v interface{}) (err error) {
+	if err = r.ParseForm(); err == nil {
+		switch qp {
+		case QueryParams:
+			err = DefaultFormDecoder.Decode(v, r.Form)
+		case NoQueryParams:
+			err = DefaultFormDecoder.Decode(v, r.PostForm)
+		}
+	}
+	return
+}
+
+// DecodeMultipartForm parses the requests form data into the provided struct.
+//
+// The Content-Type and http method are not checked.
+//
+// NOTE: when includeQueryParams=true query params will be parsed and included
+// e. g. route /user?test=true 'test' is added to parsed MultipartForm.
+func DecodeMultipartForm(r *http.Request, qp QueryParamsOption, maxMemory int64, v interface{}) (err error) {
+	if err = r.ParseMultipartForm(maxMemory); err == nil {
+		switch qp {
+		case QueryParams:
+			err = DefaultFormDecoder.Decode(v, r.Form)
+		case NoQueryParams:
+			err = DefaultFormDecoder.Decode(v, r.MultipartForm.Value)
+		}
+	}
+	return
+}
+
 func decodeQueryParams(values url.Values, v interface{}) (err error) {
 	err = DefaultFormDecoder.Decode(v, values)
 	return
