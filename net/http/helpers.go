@@ -284,6 +284,35 @@ func JSONBytes(w http.ResponseWriter, status int, b []byte) (err error) {
 	return err
 }
 
+// JSONP sends a JSONP response with status code and
+// uses `callback` to construct the JSONP payload.
+func JSONP(w http.ResponseWriter, status int, i interface{}, callback string) error {
+	b, err := json.Marshal(i)
+	if err != nil {
+		return err
+	}
+
+	w.Header().Set(ContentType, ApplicationJSON)
+	w.WriteHeader(status)
+	if _, err = w.Write([]byte(callback + "(")); err == nil {
+		if _, err = w.Write(b); err == nil {
+			_, err = w.Write([]byte(");"))
+		}
+	}
+
+	return err
+}
+
+// JSONStream uses json.Encoder to stream the JSON response body.
+//
+// This differs from the JSON helper which unmarshalls into
+// memory first allowing the capture of JSON encoding errors.
+func JSONStream(w http.ResponseWriter, status int, i interface{}) error {
+	w.Header().Set(ContentType, ApplicationJSON)
+	w.WriteHeader(status)
+	return json.NewEncoder(w).Encode(i)
+}
+
 func decodeQueryParams(values url.Values, v interface{}) (err error) {
 	err = DefaultFormDecoder.Decode(v, values)
 	return
