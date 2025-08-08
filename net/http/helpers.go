@@ -6,9 +6,11 @@ import (
 	"encoding/xml"
 	"errors"
 	"io"
+	"mime"
 	"net"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -257,4 +259,18 @@ func decodeJSON(headers http.Header, body io.Reader, qp QueryParamsOption, value
 	}
 
 	return decodeQueryParams(values, v)
+}
+
+func detectContentType(filename string) string {
+	ext := strings.ToLower(filepath.Ext(filename))
+	if t := mime.TypeByExtension(ext); t != "" {
+		return t
+	}
+
+	switch ext {
+	case ".md":
+		return TextMarkdown
+	default:
+		return ApplicationOctetStream
+	}
 }
