@@ -193,6 +193,25 @@ func ClientIP(r *http.Request) (clientIP string) {
 	return
 }
 
+// AcceptedLanguages returns an array of accepted languages denoted by
+// the Accept-Language header sent by the browser.
+func AcceptedLanguages(r *http.Request) (languages []string) {
+	accepted := r.Header.Get(AcceptedLanguage)
+	if accepted == "" {
+		return
+	}
+
+	options := strings.Split(accepted, ",")
+	l := len(options)
+	languages = make([]string, l)
+	for i := 0; i < l; i++ {
+		locale := strings.SplitN(options[i], ";", 2)
+		languages[i] = strings.Trim(locale[0], " ")
+	}
+
+	return
+}
+
 func decodeQueryParams(values url.Values, v interface{}) (err error) {
 	err = DefaultFormDecoder.Decode(v, values)
 	return
