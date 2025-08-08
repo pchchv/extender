@@ -170,6 +170,39 @@ func DecodeMultipartForm(r *http.Request, qp QueryParamsOption, maxMemory int64,
 	return
 }
 
+// Decode takes the request and attempts to discover its content type via
+// the http headers and then decode the request body into the provided struct.
+// Example if header was "application/json" would decode using
+// json.NewDecoder(ioext.LimitReader(r.Body, maxBytes)).Decode(v).
+//
+// This default to parsing query params if includeQueryParams=true and no other content type matches.
+//
+// NOTE: when includeQueryParams=true query params will be parsed and included
+// e. g. route /user?test=true 'test' is added to parsed XML and replaces any values that may have been present.
+func Decode(r *http.Request, qp QueryParamsOption, maxMemory int64, v interface{}) (err error) {
+	typ := r.Header.Get(ContentType)
+	if idx := strings.Index(typ, ";"); idx != -1 {
+		typ = typ[:idx]
+	}
+
+	switch typ {
+	case nakedApplicationJSON:
+		err = DecodeJSON(r, qp, maxMemory, v)
+	case nakedApplicationXML:
+		err = DecodeXML(r, qp, maxMemory, v)
+	case ApplicationForm:
+		err = DecodeForm(r, qp, v)
+	case MultipartForm:
+		err = DecodeMultipartForm(r, qp, maxMemory, v)
+	default:
+		if qp == QueryParams {
+			err = DecodeQueryParams(r, v)
+		}
+	}
+
+	return
+}
+
 // ClientIP implements the best effort algorithm to return the real client IP,
 // it parses X-Real-IP and X-Forwarded-For in order to work properly with
 // reverse-proxies such us: nginx or haproxy.
