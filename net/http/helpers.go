@@ -195,6 +195,15 @@ func ClientIP(r *http.Request) (clientIP string) {
 	return
 }
 
+// Inline is a helper method for returning a file inline to be rendered/opened by the browser.
+func Inline(w http.ResponseWriter, r io.Reader, filename string) (err error) {
+	w.Header().Set(ContentDisposition, "inline;filename="+filename)
+	w.Header().Set(ContentType, detectContentType(filename))
+	w.WriteHeader(http.StatusOK)
+	_, err = io.Copy(w, r)
+	return
+}
+
 // AcceptedLanguages returns an array of accepted languages denoted by
 // the Accept-Language header sent by the browser.
 func AcceptedLanguages(r *http.Request) (languages []string) {
