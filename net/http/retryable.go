@@ -4,6 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
+
+	errorsext "github.com/pchchv/extender/errors"
+	resultext "github.com/pchchv/extender/values/result"
 )
 
 var (
@@ -74,4 +78,45 @@ func IsRetryableStatusCode(code int) bool {
 // IsNonRetryableStatusCode returns true if the provided status code should generally not be retryable.
 func IsNonRetryableStatusCode(code int) bool {
 	return nonRetryableStatusCodes[code]
+}
+
+// DoRetryableResponse will execute the provided functions code and automatically retry before returning the *http.Response.
+//
+// Deprecated: use `httpext.Retrier` instead which corrects design issues with the current implementation.
+func DoRetryableResponse(ctx context.Context, onRetryFn errorsext.OnRetryFn[error], isRetryableStatusCode IsRetryableStatusCodeFnR, client *http.Client, buildFn BuildRequestFnR) resultext.Result[*http.Response, error] {
+	if client == nil {
+		client = http.DefaultClient
+	}
+
+	var attempt int
+	for {
+		req, err := buildFn(ctx)
+		if err != nil {
+			return resultext.Err[*http.Response, error](err)
+		}
+
+		resp, err := client.Do(req)
+		if err != nil {
+			if retryReason, isRetryable := errorsext.IsRetryableHTTP(err); isRetryable {
+				opt := onRetryFn(ctx, err, retryReason, attempt)
+				if opt.IsSome() {
+					return resultext.Err[*http.Response, error](opt.Unwrap())
+				}
+				attempt++
+				continue
+			}
+			return resultext.Err[*http.Response, error](err)
+		}
+
+		if isRetryableStatusCode(resp.StatusCode) {
+			opt := onRetryFn(ctx, ErrRetryableStatusCode{Response: resp}, strconv.Itoa(resp.StatusCode), attempt)
+			if opt.IsSome() {
+				return resultext.Err[*http.Response, error](opt.Unwrap())
+			}
+			attempt++
+			continue
+		}
+
+		return resultext.Ok[*http.Response, error](resp)
+	}
 }
