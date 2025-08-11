@@ -76,6 +76,10 @@ type ErrUnexpectedResponse struct {
 	Response *http.Response
 }
 
+func (e ErrUnexpectedResponse) Error() string {
+	return "unexpected response encountered"
+}
+
 // IsRetryableStatusCode returns true if the provided status code is considered retryable.
 func IsRetryableStatusCode(code int) bool {
 	return retryableStatusCodes[code]
