@@ -55,6 +55,10 @@ type ErrRetryableStatusCode struct {
 	Response *http.Response
 }
 
+func (e ErrRetryableStatusCode) Error() string {
+	return fmt.Sprintf("retryable HTTP status code encountered: %d", e.Response.StatusCode)
+}
+
 // IsRetryableStatusCode returns true if the provided status code is considered retryable.
 func IsRetryableStatusCode(code int) bool {
 	return retryableStatusCodes[code]
