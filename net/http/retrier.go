@@ -2,6 +2,7 @@ package httpext
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -60,6 +61,69 @@ type Retryer struct {
 	maxBytes                bytesext.Bytes
 	mode                    errorsext.MaxAttemptsMode
 	maxAttempts             uint8
+}
+
+// NewRetryer returns a new `Retryer` with sane default values.
+//
+// The default values are:
+//   - `IsRetryableFn` uses the existing `errorsext.IsRetryableHTTP` function.
+//   - `MaxAttemptsMode` is `MaxAttemptsNonRetryableReset`.
+//   - `MaxAttempts` is 5.
+//   - `BackoffFn` will sleep for 200ms or is successful `Retry-After` header can be parsed. It's recommended to use
+//     exponential backoff for production with a quick copy-paste-modify of the default function
+//   - `Timeout` is 0.
+//   - `IsRetryableStatusCodeFn` is set to the existing `IsRetryableStatusCode` function.
+//   - `IsEarlyReturnFn` is set to check if the error is an `ErrStatusCode` and if the status code is non-retryable.
+//   - `Client` is set to `http.DefaultClient`.
+//   - `MaxBytes` is set to 2MiB.
+//   - `DecodeAnyFn` is set to the existing `DecodeResponseAny` function that supports JSON and XML.
+//
+// WARNING: The default functions may receive enhancements or fixes in the future which could change their behavior,
+// however every attempt will be made to maintain backwards compatibility or made additive-only if possible.
+func NewRetryer() Retryer {
+	return Retryer{
+		client:      http.DefaultClient,
+		maxBytes:    2 * bytesext.MiB,
+		mode:        errorsext.MaxAttemptsNonRetryableReset,
+		maxAttempts: 5,
+		isRetryableFn: func(ctx context.Context, err error) (isRetryable bool) {
+			_, isRetryable = errorsext.IsRetryableHTTP(err)
+			return
+		},
+		isRetryableStatusCodeFn: func(_ context.Context, code int) bool { return IsRetryableStatusCode(code) },
+		isEarlyReturnFn: func(_ context.Context, err error) bool {
+			var sce ErrStatusCode
+			if errors.As(err, &sce) {
+				return IsNonRetryableStatusCode(sce.StatusCode)
+			}
+			return false
+		},
+		decodeFn: func(ctx context.Context, resp *http.Response, maxMemory bytesext.Bytes, v any) error {
+			err := DecodeResponseAny(resp, maxMemory, v)
+			if err != nil {
+				return err
+			}
+			return nil
+		},
+		backoffFn: func(ctx context.Context, attempt int, err error) {
+			wait := time.Millisecond * 200
+			var sce ErrStatusCode
+			if errors.As(err, &sce) {
+				if sce.Headers != nil && (sce.StatusCode == http.StatusTooManyRequests || sce.StatusCode == http.StatusServiceUnavailable) {
+					if ra := HasRetryAfter(sce.Headers); ra.IsSome() {
+						wait = ra.Unwrap()
+					}
+				}
+			}
+
+			t := time.NewTimer(wait)
+			defer t.Stop()
+			select {
+			case <-ctx.Done():
+			case <-t.C:
+			}
+		},
+	}
 }
 
 // IsRetryableFn sets the `IsRetryableFn` for the `Retryer`.
