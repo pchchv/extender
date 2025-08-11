@@ -54,6 +54,12 @@ var (
 	}
 )
 
+// IsRetryableStatusCodeFnR is a function used to determine if the provided status code is considered retryable.
+type IsRetryableStatusCodeFnR func(code int) bool
+
+// BuildRequestFnR is a function used to rebuild an HTTP request for use in retryable code.
+type BuildRequestFnR func(ctx context.Context) (*http.Request, error)
+
 // ErrRetryableStatusCode can be used to indicate a
 // retryable HTTP status code was encountered as an error.
 type ErrRetryableStatusCode struct {
@@ -64,11 +70,11 @@ func (e ErrRetryableStatusCode) Error() string {
 	return fmt.Sprintf("retryable HTTP status code encountered: %d", e.Response.StatusCode)
 }
 
-// IsRetryableStatusCodeFnR is a function used to determine if the provided status code is considered retryable.
-type IsRetryableStatusCodeFnR func(code int) bool
-
-// BuildRequestFnR is a function used to rebuild an HTTP request for use in retryable code.
-type BuildRequestFnR func(ctx context.Context) (*http.Request, error)
+// ErrUnexpectedResponse can be used to indicate an unexpected response was
+// encountered as an error and provide access to the *http.Response.
+type ErrUnexpectedResponse struct {
+	Response *http.Response
+}
 
 // IsRetryableStatusCode returns true if the provided status code is considered retryable.
 func IsRetryableStatusCode(code int) bool {
