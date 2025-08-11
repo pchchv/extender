@@ -1,6 +1,7 @@
 package httpext
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 )
@@ -61,6 +62,9 @@ func (e ErrRetryableStatusCode) Error() string {
 
 // IsRetryableStatusCodeFnR is a function used to determine if the provided status code is considered retryable.
 type IsRetryableStatusCodeFnR func(code int) bool
+
+// BuildRequestFnR is a function used to rebuild an HTTP request for use in retryable code.
+type BuildRequestFnR func(ctx context.Context) (*http.Request, error)
 
 // IsRetryableStatusCode returns true if the provided status code is considered retryable.
 func IsRetryableStatusCode(code int) bool {
