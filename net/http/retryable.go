@@ -1,6 +1,9 @@
 package httpext
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 var (
 	// retryableStatusCodes defines the common HTTP response codes that are considered retryable.
@@ -45,6 +48,12 @@ var (
 		http.StatusNetworkAuthenticationRequired: true,
 	}
 )
+
+// ErrRetryableStatusCode can be used to indicate a
+// retryable HTTP status code was encountered as an error.
+type ErrRetryableStatusCode struct {
+	Response *http.Response
+}
 
 // IsRetryableStatusCode returns true if the provided status code is considered retryable.
 func IsRetryableStatusCode(code int) bool {
