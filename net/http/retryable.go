@@ -59,6 +59,9 @@ func (e ErrRetryableStatusCode) Error() string {
 	return fmt.Sprintf("retryable HTTP status code encountered: %d", e.Response.StatusCode)
 }
 
+// IsRetryableStatusCodeFnR is a function used to determine if the provided status code is considered retryable.
+type IsRetryableStatusCodeFnR func(code int) bool
+
 // IsRetryableStatusCode returns true if the provided status code is considered retryable.
 func IsRetryableStatusCode(code int) bool {
 	return retryableStatusCodes[code]
