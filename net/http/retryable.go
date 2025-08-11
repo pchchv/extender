@@ -2,12 +2,7 @@ package httpext
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"strconv"
-
-	errorsext "github.com/pchchv/extender/errors"
-	resultext "github.com/pchchv/extender/values/result"
 )
 
 var (
@@ -60,26 +55,6 @@ type IsRetryableStatusCodeFnR func(code int) bool
 // BuildRequestFnR is a function used to rebuild an HTTP request for use in retryable code.
 type BuildRequestFnR func(ctx context.Context) (*http.Request, error)
 
-// ErrRetryableStatusCode can be used to indicate a
-// retryable HTTP status code was encountered as an error.
-type ErrRetryableStatusCode struct {
-	Response *http.Response
-}
-
-func (e ErrRetryableStatusCode) Error() string {
-	return fmt.Sprintf("retryable HTTP status code encountered: %d", e.Response.StatusCode)
-}
-
-// ErrUnexpectedResponse can be used to indicate an unexpected response was
-// encountered as an error and provide access to the *http.Response.
-type ErrUnexpectedResponse struct {
-	Response *http.Response
-}
-
-func (e ErrUnexpectedResponse) Error() string {
-	return "unexpected response encountered"
-}
-
 // IsRetryableStatusCode returns true if the provided status code is considered retryable.
 func IsRetryableStatusCode(code int) bool {
 	return retryableStatusCodes[code]
@@ -88,45 +63,4 @@ func IsRetryableStatusCode(code int) bool {
 // IsNonRetryableStatusCode returns true if the provided status code should generally not be retryable.
 func IsNonRetryableStatusCode(code int) bool {
 	return nonRetryableStatusCodes[code]
-}
-
-// DoRetryableResponse will execute the provided functions code and automatically retry before returning the *http.Response.
-//
-// Deprecated: use `httpext.Retrier` instead which corrects design issues with the current implementation.
-func DoRetryableResponse(ctx context.Context, onRetryFn errorsext.OnRetryFn[error], isRetryableStatusCode IsRetryableStatusCodeFnR, client *http.Client, buildFn BuildRequestFnR) resultext.Result[*http.Response, error] {
-	if client == nil {
-		client = http.DefaultClient
-	}
-
-	var attempt int
-	for {
-		req, err := buildFn(ctx)
-		if err != nil {
-			return resultext.Err[*http.Response, error](err)
-		}
-
-		resp, err := client.Do(req)
-		if err != nil {
-			if retryReason, isRetryable := errorsext.IsRetryableHTTP(err); isRetryable {
-				opt := onRetryFn(ctx, err, retryReason, attempt)
-				if opt.IsSome() {
-					return resultext.Err[*http.Response, error](opt.Unwrap())
-				}
-				attempt++
-				continue
-			}
-			return resultext.Err[*http.Response, error](err)
-		}
-
-		if isRetryableStatusCode(resp.StatusCode) {
-			opt := onRetryFn(ctx, ErrRetryableStatusCode{Response: resp}, strconv.Itoa(resp.StatusCode), attempt)
-			if opt.IsSome() {
-				return resultext.Err[*http.Response, error](opt.Unwrap())
-			}
-			attempt++
-			continue
-		}
-
-		return resultext.Ok[*http.Response, error](resp)
-	}
 }
