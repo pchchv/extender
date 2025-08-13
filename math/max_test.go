@@ -19,3 +19,27 @@ func TestMax(t *testing.T) {
 	Equal(t, 0, Max(0, -0))
 	Equal(t, 0, Max(-0, 0))
 }
+
+func BenchmarkMaxInf(b *testing.B) {
+	n1 := math.Inf(0)
+	n2 := math.Inf(-1)
+	for i := 0; i < b.N; i++ {
+		_ = Max(n1, n2)
+	}
+}
+
+func BenchmarkMaxNaN(b *testing.B) {
+	n1 := math.Inf(0)
+	n2 := math.NaN()
+	for i := 0; i < b.N; i++ {
+		_ = Max(n1, n2)
+	}
+}
+
+func BenchmarkMaxNumber(b *testing.B) {
+	n1 := 1
+	n2 := 3
+	for i := 0; i < b.N; i++ {
+		_ = Max(n1, n2)
+	}
+}
