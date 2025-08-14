@@ -3,7 +3,10 @@ package contextext
 import (
 	"context"
 	"fmt"
+	"time"
 )
+
+var _ context.Context = (*detachedContext)(nil)
 
 type detachedContext struct {
 	parent context.Context
@@ -33,4 +36,12 @@ func (c detachedContext) Err() error {
 
 func (c detachedContext) String() string {
 	return fmt.Sprintf("%s.Detached", c.parent)
+}
+
+func (c detachedContext) Done() <-chan struct{} {
+	return nil
+}
+
+func (c detachedContext) Deadline() (deadline time.Time, ok bool) {
+	return
 }
