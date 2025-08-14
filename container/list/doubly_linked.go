@@ -58,32 +58,6 @@ func (d *DoublyLinkedList[V]) Len() int {
 	return d.len
 }
 
-func (d *DoublyLinkedList[V]) pushBack(node *Node[V]) {
-	node.prev = d.tail
-	node.next = nil
-	if d.tail == nil {
-		d.head = node
-	} else {
-		d.tail.next = node
-	}
-
-	d.tail = node
-	d.len++
-}
-
-func (d *DoublyLinkedList[V]) pushFront(node *Node[V]) {
-	node.next = d.head
-	node.prev = nil
-	if d.head == nil {
-		d.tail = node
-	} else {
-		d.head.prev = node
-	}
-
-	d.head = node
-	d.len++
-}
-
 // PopBack removes the last element from a list and returns it or nil.
 func (d *DoublyLinkedList[V]) PopBack() *Node[V] {
 	if d.IsEmpty() {
@@ -152,4 +126,30 @@ func (d *DoublyLinkedList[V]) Remove(node *Node[V]) {
 		node.next, node.prev = nil, nil
 		d.len--
 	}
+}
+
+func (d *DoublyLinkedList[V]) pushBack(node *Node[V]) {
+	node.prev = d.tail
+	node.next = nil
+	if d.tail == nil {
+		d.head = node
+	} else {
+		d.tail.next = node
+	}
+
+	d.tail = node
+	d.len++
+}
+
+func (d *DoublyLinkedList[V]) pushFront(node *Node[V]) {
+	node.next = d.head
+	node.prev = nil
+	if d.head == nil {
+		d.tail = node
+	} else {
+		d.head.prev = node
+	}
+
+	d.head = node
+	d.len++
 }
