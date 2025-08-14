@@ -83,3 +83,43 @@ func (d *DoublyLinkedList[V]) pushFront(node *Node[V]) {
 	d.head = node
 	d.len++
 }
+
+// PopBack removes the last element from a list and returns it or nil.
+func (d *DoublyLinkedList[V]) PopBack() *Node[V] {
+	if d.IsEmpty() {
+		return nil
+	}
+
+	node := d.tail
+	d.tail = node.prev
+	if d.tail == nil {
+		d.head = nil
+	} else {
+		d.tail.next = nil
+	}
+
+	d.len--
+	// ensure no leakage
+	node.next, node.prev = nil, nil
+	return node
+}
+
+// PopFront removes the first element and returns it or nil.
+func (d *DoublyLinkedList[V]) PopFront() *Node[V] {
+	if d.IsEmpty() {
+		return nil
+	}
+
+	node := d.head
+	d.head = node.next
+	if d.head == nil {
+		d.tail = nil
+	} else {
+		d.head.prev = nil
+	}
+
+	d.len--
+	// ensure no leakage
+	node.next, node.prev = nil, nil
+	return node
+}
