@@ -19,3 +19,11 @@ func Detach(parent context.Context) detachedContext {
 	}
 	return detachedContext{parent: parent}
 }
+
+func (c detachedContext) Value(key interface{}) interface{} {
+	return c.parent.Value(key)
+}
+
+func (c detachedContext) Err() error {
+	return nil
+}
