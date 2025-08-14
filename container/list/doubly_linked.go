@@ -123,3 +123,13 @@ func (d *DoublyLinkedList[V]) PopFront() *Node[V] {
 	node.next, node.prev = nil, nil
 	return node
 }
+
+// Back returns the end/tail element for use without removing it or nil list is empty.
+func (d *DoublyLinkedList[V]) Back() *Node[V] {
+	return d.tail
+}
+
+// Front returns the front/head element for use without removing it or nil list is empty.
+func (d *DoublyLinkedList[V]) Front() *Node[V] {
+	return d.head
+}
