@@ -138,6 +138,16 @@ func (d *DoublyLinkedList[V]) MoveBefore(node *Node[V], moving *Node[V]) {
 	d.moveBefore(node, moving)
 }
 
+// MoveAfter moves the `moving` node after the supplied `node`.
+//
+// The supplied `node` and `moving` nodes must be attached to the current list otherwise
+// undefined behaviour could occur.
+func (d *DoublyLinkedList[V]) MoveAfter(node *Node[V], moving *Node[V]) {
+	// first detach node were moving after, in case it was already attached somewhere else in the list.
+	d.Remove(moving)
+	d.moveAfter(node, moving)
+}
+
 func (d *DoublyLinkedList[V]) pushBack(node *Node[V]) {
 	node.prev = d.tail
 	node.next = nil
@@ -174,6 +184,20 @@ func (d *DoublyLinkedList[V]) moveBefore(node *Node[V], moving *Node[V]) {
 		moving.next = node
 		moving.prev = prev
 		prev.next = moving
+		d.len++
+	}
+}
+
+func (d *DoublyLinkedList[V]) moveAfter(node *Node[V], moving *Node[V]) {
+	next := node.next
+	// no next means node == d.tail
+	if next == nil {
+		d.pushBack(moving)
+	} else {
+		node.next = moving
+		moving.prev = node
+		moving.next = next
+		next.prev = moving
 		d.len++
 	}
 }
