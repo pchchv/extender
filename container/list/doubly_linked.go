@@ -16,3 +16,14 @@ func (n *Node[V]) Next() *Node[V] {
 func (n *Node[V]) Prev() *Node[V] {
 	return n.prev
 }
+
+// DoublyLinkedList is a doubly linked list
+type DoublyLinkedList[V any] struct {
+	head, tail *Node[V]
+	len        int
+}
+
+// NewDoublyLinked creates a DoublyLinkedList for use.
+func NewDoublyLinked[V any]() *DoublyLinkedList[V] {
+	return new(DoublyLinkedList[V])
+}
