@@ -133,3 +133,23 @@ func (d *DoublyLinkedList[V]) Back() *Node[V] {
 func (d *DoublyLinkedList[V]) Front() *Node[V] {
 	return d.head
 }
+
+// Remove removes the provided element from the Linked List.
+//
+// The supplied node must be attached to the current list otherwise undefined behaviour could occur.
+func (d *DoublyLinkedList[V]) Remove(node *Node[V]) {
+	if node.prev == nil {
+		// is head node
+		_ = d.PopFront()
+	} else if node.next == nil {
+		// is tail node
+		_ = d.PopBack()
+	} else {
+		// is both head and tail nodes, must remap
+		node.next.prev = node.prev
+		node.prev.next = node.next
+		// ensure no leakage
+		node.next, node.prev = nil, nil
+		d.len--
+	}
+}
