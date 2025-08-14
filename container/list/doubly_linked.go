@@ -27,3 +27,26 @@ type DoublyLinkedList[V any] struct {
 func NewDoublyLinked[V any]() *DoublyLinkedList[V] {
 	return new(DoublyLinkedList[V])
 }
+
+// PushBack appends an element to the back of a list.
+func (d *DoublyLinkedList[V]) PushBack(v V) *Node[V] {
+	node := &Node[V]{
+		Value: v,
+	}
+
+	d.pushBack(node)
+	return d.tail
+}
+
+func (d *DoublyLinkedList[V]) pushBack(node *Node[V]) {
+	node.prev = d.tail
+	node.next = nil
+	if d.tail == nil {
+		d.head = node
+	} else {
+		d.tail.next = node
+	}
+
+	d.tail = node
+	d.len++
+}
