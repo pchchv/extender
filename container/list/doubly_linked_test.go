@@ -1,6 +1,7 @@
 package listext
 
 import (
+	"container/list"
 	"testing"
 
 	. "github.com/pchchv/go-assert"
@@ -54,4 +55,12 @@ func TestSingleEntryPopFront(t *testing.T) {
 
 	back := l.PopBack()
 	Equal(t, back, nil)
+}
+
+func BenchmarkDoublyLinkedList_STD(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		l := list.New()
+		node := l.PushBack(0)
+		_ = l.Remove(node)
+	}
 }
