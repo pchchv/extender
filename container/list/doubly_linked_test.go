@@ -64,3 +64,12 @@ func BenchmarkDoublyLinkedList_STD(b *testing.B) {
 		_ = l.Remove(node)
 	}
 }
+
+func BenchmarkDoublyLinkedList(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		l := NewDoublyLinked[int]()
+		node := l.PushBack(0)
+		l.Remove(node)
+		_ = node.Value
+	}
+}
