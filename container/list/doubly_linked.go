@@ -48,6 +48,16 @@ func (d *DoublyLinkedList[V]) PushFront(v V) *Node[V] {
 	return d.head
 }
 
+// IsEmpty returns true if the list is empty.
+func (d *DoublyLinkedList[V]) IsEmpty() bool {
+	return d.len == 0
+}
+
+// Len returns length of the Linked List.
+func (d *DoublyLinkedList[V]) Len() int {
+	return d.len
+}
+
 func (d *DoublyLinkedList[V]) pushBack(node *Node[V]) {
 	node.prev = d.tail
 	node.next = nil
