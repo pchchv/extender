@@ -38,6 +38,16 @@ func (d *DoublyLinkedList[V]) PushBack(v V) *Node[V] {
 	return d.tail
 }
 
+// PushFront adds an element first in the list.
+func (d *DoublyLinkedList[V]) PushFront(v V) *Node[V] {
+	node := &Node[V]{
+		Value: v,
+	}
+
+	d.pushFront(node)
+	return d.head
+}
+
 func (d *DoublyLinkedList[V]) pushBack(node *Node[V]) {
 	node.prev = d.tail
 	node.next = nil
@@ -48,5 +58,18 @@ func (d *DoublyLinkedList[V]) pushBack(node *Node[V]) {
 	}
 
 	d.tail = node
+	d.len++
+}
+
+func (d *DoublyLinkedList[V]) pushFront(node *Node[V]) {
+	node.next = d.head
+	node.prev = nil
+	if d.head == nil {
+		d.tail = node
+	} else {
+		d.head.prev = node
+	}
+
+	d.head = node
 	d.len++
 }
