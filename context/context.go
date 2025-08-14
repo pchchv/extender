@@ -1,6 +1,9 @@
 package contextext
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 type detachedContext struct {
 	parent context.Context
@@ -26,4 +29,8 @@ func (c detachedContext) Value(key interface{}) interface{} {
 
 func (c detachedContext) Err() error {
 	return nil
+}
+
+func (c detachedContext) String() string {
+	return fmt.Sprintf("%s.Detached", c.parent)
 }
