@@ -267,3 +267,11 @@ func (d *DoublyLinkedList[V]) InsertAtFront(node *Node[V]) {
 func (d *DoublyLinkedList[V]) InsertAtBack(node *Node[V]) {
 	d.pushBack(node)
 }
+
+// Clear removes all elements from the Linked List.
+func (d *DoublyLinkedList[V]) Clear() {
+	// must loop and clean up references to each other
+	for d.PopBack() != nil {
+	}
+	d.head, d.tail, d.len = nil, nil, 0
+}
