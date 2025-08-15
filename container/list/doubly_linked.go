@@ -239,3 +239,17 @@ func (d *DoublyLinkedList[V]) MoveToFront(node *Node[V]) {
 	d.Remove(node)
 	d.pushFront(node)
 }
+
+// InsertBefore inserts the supplied node before the supplied node.
+//
+// The supplied node must be attached to the current list otherwise undefined behaviour could occur.
+func (d *DoublyLinkedList[V]) InsertBefore(node *Node[V], inserting *Node[V]) {
+	d.moveBefore(node, inserting)
+}
+
+// InsertAfter inserts the supplied node after the supplied node.
+//
+// The supplied node must be attached to the current list otherwise undefined behaviour could occur.
+func (d *DoublyLinkedList[V]) InsertAfter(node *Node[V], inserting *Node[V]) {
+	d.moveAfter(node, inserting)
+}
