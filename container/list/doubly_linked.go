@@ -223,3 +223,19 @@ func (d *DoublyLinkedList[V]) moveAfter(node *Node[V], moving *Node[V]) {
 		d.len++
 	}
 }
+
+// MoveToBack moves the provided node to the end/tail.
+//
+// The supplied node must be attached to the current list otherwise undefined behaviour could occur.
+func (d *DoublyLinkedList[V]) MoveToBack(node *Node[V]) {
+	d.Remove(node)
+	d.pushBack(node)
+}
+
+// MoveToFront moves the provided node to the front/head.
+//
+// The supplied node must be attached to the current list otherwise undefined behaviour could occur.
+func (d *DoublyLinkedList[V]) MoveToFront(node *Node[V]) {
+	d.Remove(node)
+	d.pushFront(node)
+}
