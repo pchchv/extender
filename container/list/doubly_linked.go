@@ -48,6 +48,28 @@ func (d *DoublyLinkedList[V]) PushFront(v V) *Node[V] {
 	return d.head
 }
 
+// PushAfter pushes the supplied Value after the supplied node.
+//
+// The supplied node must be attached to the current list otherwise undefined behaviour could occur.
+func (d *DoublyLinkedList[V]) PushAfter(node *Node[V], v V) *Node[V] {
+	newNode := &Node[V]{
+		Value: v,
+	}
+	d.moveAfter(node, newNode)
+	return newNode
+}
+
+// PushBefore pushes the supplied Value before the supplied node.
+//
+// The supplied node must be attached to the current list otherwise undefined behaviour could occur.
+func (d *DoublyLinkedList[V]) PushBefore(node *Node[V], v V) *Node[V] {
+	newNode := &Node[V]{
+		Value: v,
+	}
+	d.moveBefore(node, newNode)
+	return newNode
+}
+
 // IsEmpty returns true if the list is empty.
 func (d *DoublyLinkedList[V]) IsEmpty() bool {
 	return d.len == 0
