@@ -1,4 +1,4 @@
-# extender [![Godoc Reference](https://pkg.go.dev/badge/github.com/pchchv/extender)](https://pkg.go.dev/github.com/pchchv/extender) [![Go Report Card](https://goreportcard.com/badge/github.com/pchchv/extender)](https://goreportcard.com/report/github.com/pchchv/extender)
+# extender [![CI](https://github.com/pchchv/extender/workflows/CI/badge.svg)](https://github.com/pchchv/extender/actions?query=workflow%3ACI+event%3Apush) [![Godoc Reference](https://pkg.go.dev/badge/github.com/pchchv/extender)](https://pkg.go.dev/github.com/pchchv/extender) [![Go Report Card](https://goreportcard.com/badge/github.com/pchchv/extender)](https://goreportcard.com/report/github.com/pchchv/extender)
 
 Package that extends the basic go packages by adding missing or additional functionality to them. All packages match the std go package name with the optional `ext` suffix to avoid name conflicts.
 
